@@ -11,10 +11,10 @@ Model name is converted to lowercase for the collection name:
 - BlogPost -> "blogs" collection
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List
 
-# Example schemas (replace with your own):
+# Example schemas (you can keep these and add new ones below)
 
 class User(BaseModel):
     """
@@ -22,24 +22,45 @@ class User(BaseModel):
     Collection name: "user" (lowercase of class name)
     """
     name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
+    email: EmailStr = Field(..., description="Email address")
     address: str = Field(..., description="Address")
     age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
     is_active: bool = Field(True, description="Whether user is active")
 
-class Product(BaseModel):
+class SparePart(BaseModel):
     """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
+    Car spare parts collection schema
+    Collection name: "sparepart"
     """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
+    name: str = Field(..., description="Part name")
+    sku: str = Field(..., description="Stock keeping unit")
+    brand: str = Field(..., description="Manufacturer/Brand")
+    category: str = Field(..., description="Category, e.g., Brakes, Filters")
     price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+    stock: int = Field(..., ge=0, description="Units in stock")
+    compatibility: list[str] = Field(default_factory=list, description="Compatible car models")
+    image_url: Optional[str] = Field(None, description="Image URL")
+    description: Optional[str] = Field(None, description="Description")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class OrderItem(BaseModel):
+    product_id: str = Field(..., description="Referenced spare part id")
+    name: str = Field(..., description="Product name snapshot")
+    price: float = Field(..., ge=0, description="Unit price at purchase time")
+    quantity: int = Field(..., ge=1, description="Quantity")
+
+class Order(BaseModel):
+    """
+    Orders collection schema
+    Collection name: "order"
+    """
+    customer_name: str
+    email: EmailStr
+    phone: str
+    address: str
+    items: List[OrderItem]
+    subtotal: float = Field(..., ge=0)
+    delivery_fee: float = Field(0, ge=0)
+    total: float = Field(..., ge=0)
 
 # Note: The Flames database viewer will automatically:
 # 1. Read these schemas from GET /schema endpoint
